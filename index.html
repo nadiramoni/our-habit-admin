@@ -188,6 +188,9 @@
         <button class="btn btn-gray" onclick="loadUsers(true)" id="reloadBtn">↻ রিফ্রেশ</button>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="filters"></div>
+      <div style="background:rgba(125,211,252,.08);border:1px solid rgba(125,211,252,.2);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#7dd3fc;line-height:1.6">
+        💡 <b>টিপ:</b> পাসওয়ার্ড বদলাতে বা পুরো Auth অ্যাকাউন্ট ডিলিট করতে ইউজারের নামে ক্লিক করো → নিচে <b>"🔑 Firebase-এ পাসওয়ার্ড বদলাও / অ্যাকাউন্ট ডিলিট"</b> বাটন পাবে। Firebase Web SDK সরাসরি অন্যের পাসওয়ার্ড বদলাতে দেয় না — তাই এটা Firebase Console দিয়েই করতে হয়।
+      </div>
       <div class="tblwrap">
         <table>
           <thead><tr><th>নাম</th><th>ইমেইল</th><th>ধরন</th><th>স্ট্যাটাস</th><th>আজ (নামাজ/পানি/রিলস)</th><th>🔥</th><th>শেষ অ্যাক্টিভ</th><th></th></tr></thead>
@@ -327,6 +330,7 @@ const S = {
   confirmKey: "",
   loading: false,
 };
+window.S = S; // 🔑 v3.3 FIX: expose S to window so inline onclick="S.filter=..." works
 
 /* ---------------- helpers ---------------- */
 async function sha256hex(text) {
@@ -674,12 +678,32 @@ window.openDetail = async function (uid) {
   }
   html += "<button class='btn btn-gray' onclick=\"actDo('reset')\">✉️ পাসওয়ার্ড রিসেট মেইল</button>";
   if (ck === "del") {
-    html += " <button class='btn btn-red spin' onclick=\"actDo('delData')\">⚠️ হ্যাঁ, ক্লাউড ডেটা মুছে দাও!</button> <button class='btn btn-gray' onclick=\"S.confirmKey='';openDetail('" + esc(uid) + "')\">না</button>";
+    html += " <button class='btn btn-red spin' onclick=\"actDo('delData')\">⚠️ হ্যাঁ, পুরো ক্লাউড ডেটা মুছে দাও!</button> <button class='btn btn-gray' onclick=\"S.confirmKey='';openDetail('" + esc(uid) + "')\">না</button>";
   } else {
     html += " <button class='btn btn-rose' onclick=\"confirmOr('delData')\">🗑️ ক্লাউড ডেটা ডিলিট</button>";
   }
-  html += "</div><p class='msg' id='actMsg'></p>" +
-    "<p class='note'>ব্যান = ওই ইউজারের অ্যাপ কয়েক মিনিটের মধ্যে বন্ধ হয়ে যাবে, আর লগইনে \"অ্যাকাউন্ট ব্যান করা হয়েছে\" দেখাবে (v3.2+ APK-তে)। রিসেট মেইল = Firebase ওর ইমেইলে সরাসরি রিসেট লিংক পাঠাবে। ক্লাউড ডেটা ডিলিট = ওর হ্যাবিট রেকর্ড মুছে যাবে (অ্যাকাউন্ট স্তরে ডিলিট ক্লাউড প্যানেলে সম্ভব না — ব্যান ব্যবহার করো)।</p></div>";
+  // v3.3 NEW: jump-to-Firebase-Console button (password change + Auth delete need it)
+  const fbAuthUrl = "https://console.firebase.google.com/project/our-habit-61587/authentication/users";
+  html += " <button class='btn btn-gray' onclick=\"window.open('" + fbAuthUrl + "','_blank')\" title='Firebase Console-এ গিয়ে পাসওয়ার্ড বদলানো বা পুরো অ্যাকাউন্ট ডিলিট করা যায়'>🔑 Firebase-এ পাসওয়ার্ড বদলাও / অ্যাকাউন্ট ডিলিট</button>";
+  // v3.3 NEW: friends list display
+  if (r.friends && r.friends.length) {
+    html += "</div><p class='msg' id='actMsg'></p>";
+    html += "<h2 style='font-size:13px;margin:14px 0 8px'>👥 বন্ধু তালিকা (" + r.friends.length + " জন)</h2>";
+    html += "<div style='background:rgba(30,41,59,.5);border-radius:14px;padding:11px 13px;margin-bottom:10px'>";
+    // try to match friends against loaded users
+    const known = (otherUid) => S.users.find((x) => x.uid === otherUid);
+    html += r.friends.map((f) => {
+      const kn = known(typeof f === "string" ? f : f.uid);
+      const nm = kn ? (kn.name || "—") : (typeof f === "string" ? "—" : (f.name || "—"));
+      const em = kn ? (kn.email || "") : (typeof f === "string" ? "" : (f.email || ""));
+      return "<div style='padding:5px 0;border-bottom:1px solid rgba(51,65,85,.4)'><span style='color:var(--em300);font-weight:700'>" + esc(nm) + "</span> <span class='dim small'>" + esc(em) + "</span></div>";
+    }).join("");
+    html += "</div>";
+  } else {
+    html += "</div><p class='msg' id='actMsg'></p>";
+    html += "<h2 style='font-size:13px;margin:14px 0 8px'>👥 বন্ধু</h2><p class='small dim'>এই ইউজারের কোনো বন্ধু নেই</p>";
+  }
+  html += "<p class='note'>📌 <b>ব্যান</b> = ওই ইউজারের অ্যাপ কয়েক মিনিটে বন্ধ হয়ে যাবে, লগইনে \"অ্যাকাউন্ট ব্যান করা হয়েছে\" দেখাবে। <b>রিসেট মেইল</b> = Firebase সরাসরি ওর ইমেইলে রিসেট লিংক পাঠাবে। <b>ক্লাউড ডেটা ডিলিট</b> = usersIndex + backups দুটোই মুছে যাবে (Auth অ্যাকাউন্ট থাকবে — সেটার জন্য Firebase Console বাটন ব্যবহার করো)। <b>Firebase বাটন</b> = সরাসরি Firebase Console-এর Authentication পেজে যাবে, সেখান থেকে পাসওয়ার্ড বদলানো বা পুরো অ্যাকাউন্ট ডিলিট করা যায়।</p></div>";
   $("#mdBody").innerHTML = html;
 };
 window.confirmOr = (k) => { S.confirmKey = S.confirmKey === k ? "" : k; if (S.detailUid) openDetail(S.detailUid); };
@@ -700,8 +724,11 @@ window.actDo = async function (action) {
       await sendPasswordResetEmail(auth, r.email);
       msg("✉️ রিসেট মেইল পাঠানো হয়েছে → " + r.email);
     } else if (action === "delData") {
+      // v3.3: delete BOTH the habit backups AND the usersIndex profile (Firestore-level wipe)
+      // Auth account still needs Firebase Console (Admin SDK not available in pure web)
       await deleteDoc(doc(db, "backups", uid));
-      msg("🗑️ ক্লাউড ডেটা মুছে গেছে");
+      try { await deleteDoc(doc(db, "usersIndex", uid)); } catch (e) { /* may already be gone */ }
+      msg("🗑️ পুরো ক্লাউড ডেটা মুছে গেছে (backups + usersIndex)। Auth অ্যাকাউন্ট মুছতে Firebase Console বাটন ব্যবহার করো।");
     }
     await loadUsers();
     if (S.detailUid) await openDetail(S.detailUid);
