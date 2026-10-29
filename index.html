@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>অ্যাডমিন প্যানেল — আওয়ার হ্যাবিট</title>
+<title>অ্যাডমিন প্যানেল (ক্লাউড) — আওয়ার হ্যাবিট</title>
 <style>
   :root{
     --bg:#020617; --card:#0f172a; --card2:#1e293b; --line:#1e293b; --line2:#334155;
@@ -31,6 +31,8 @@
   .dim{color:var(--tx2)}.tiny{font-size:11px}.small{font-size:12px}
   .chip{display:inline-block;font-size:10px;font-weight:700;border-radius:8px;padding:3px 9px}
   .chip-ok{background:var(--embg);color:var(--em300)} .chip-ban{background:rgba(244,63,94,.15);color:var(--rose)}
+  .chip-g{background:rgba(125,211,252,.12);color:var(--sky)} .chip-e{background:rgba(196,181,253,.12);color:var(--violet)}
+  .chip-u{background:rgba(100,116,139,.15);color:var(--tx2)}
   .toggle{position:relative;width:52px;height:27px;border-radius:99px;background:#475569;transition:.2s;border:0;flex-shrink:0}
   .toggle::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:99px;background:#fff;transition:.2s}
   .toggle.on{background:var(--em600)} .toggle.on::after{left:28px}
@@ -99,639 +101,652 @@
   .msg.show{display:block}
   .err{color:var(--rose);font-size:12px;text-align:center;margin-top:9px;display:none}
   .err.show{display:block}
-  .amber{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);color:#fde68a;border-radius:12px;padding:11px 13px;font-size:12px;line-height:1.7}
-  .okbox{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:11px 13px;font-size:12px;line-height:1.7;color:var(--em300)}
-  ol.steps{padding-right:20px;margin-top:9px}
-  ol.steps li{margin-bottom:5px}
-  .spin{display:inline-block;animation:pulse 1.2s infinite}
-  @keyframes pulse{50%{opacity:.35}}
-  .pill{font-size:10px;background:var(--card2);border-radius:99px;padding:3px 10px;color:var(--tx2)}
-  .flexend{display:flex;justify-content:flex-end;gap:8px;margin-top:11px}
-  .hide{display:none !important}
+  .warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:10px 12px;font-size:11px;color:var(--amber);line-height:1.7}
+  .spin{animation:sp 1s linear infinite;display:inline-block}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .hide{display:none!important}
+  .plink{color:var(--sky);text-decoration:underline;text-underline-offset:2px;word-break:break-all}
 </style>
 </head>
 <body>
 
-<!-- ============ SCREEN: boot ============ -->
-<div id="scr-boot" class="center-screen active">
-  <p class="dim spin">লোড হচ্ছে…</p>
-</div>
-
-<!-- ============ SCREEN: no key ============ -->
-<div id="scr-nokey" class="center-screen">
+<!-- ================= LOGIN ================= -->
+<div class="center-screen active" id="scrLogin">
   <div class="center-box">
-    <div style="text-align:center;font-size:38px">🔑</div>
-    <h2 style="text-align:center;font-size:19px;margin:8px 0 12px">অ্যাডমিন কী নেই</h2>
-    <p id="nokeyHint" class="small dim" style="line-height:1.8"></p>
-    <div style="background:var(--card2);border-radius:14px;padding:13px;margin-top:13px" class="small dim">
-      <b style="color:var(--tx)">কী নামানোর নিয়ম (একবারই লাগবে):</b>
-      <ol class="steps">
-        <li>Firebase Console ওপেন করো → তোমার প্রজেক্ট (our-habit-61587)</li>
-        <li>⚙️ Project Settings → Service accounts ট্যাব</li>
-        <li>নিচের নীল বাটন <b>“Generate new private key”</b> চাপো</li>
-        <li>ডাউনলোড হওয়া JSON ফাইলটাকে নাম বদলে <b style="color:var(--em300)">admin-sdk-key.json</b> করে প্রজেক্ট ফোল্ডারে রাখো (package.json যেখানে আছে ঠিক সেখানে)</li>
-        <li>তারপর <span class="mono">bun run dev</span> দিয়ে সার্ভার চালু করো আর এই প্যানেল রিফ্রেশ দাও</li>
-      </ol>
+    <div style="text-align:center;font-size:40px">🛡️</div>
+    <h1 style="font-size:18px;text-align:center;margin-top:6px">অ্যাডমিন প্যানেল</h1>
+    <p class="tiny dim" style="text-align:center;margin-top:2px">আওয়ার হ্যাবিট — ক্লাউড প্যানেল v4.0 (পিসি লাগে না)</p>
+    <div style="margin-top:20px">
+      <input id="lgEmail" class="field" type="email" inputmode="email" placeholder="তোমার ইমেইল" autocomplete="email" />
+      <input id="lgPass" class="field" type="password" placeholder="পাসওয়ার্ড" autocomplete="current-password" style="margin-top:10px" />
+      <button id="lgBtn" class="btn btn-em" style="width:100%;margin-top:14px;min-height:46px">🔐 ইমেইল + পাসওয়ার্ড দিয়ে ঢুকো</button>
+      <p class="err" id="lgErr"></p>
+      <p class="note">এটা তোমার নিজের (মালিকের) অ্যাকাউন্ট — অ্যাপে যে ইমেইল/পাসওয়ার্ড দিয়ে ঢুকো, সেটাই। প্রথমবার ঢুকলে পিন ৭৫৫ দিয়ে অ্যাডমিন হিসেবে দাবি করবে।</p>
     </div>
-    <p class="tiny" style="color:var(--rose);margin-top:11px;line-height:1.7">⚠️ admin-sdk-key.json কারো সাথে শেয়ার করবে না — এটা তোমার পুরো Firebase প্রজেক্টের মাস্টার চাবি।</p>
-    <div class="flexend"><button class="btn btn-em" onclick="boot()">🔄 আবার চেষ্টা করো</button></div>
   </div>
 </div>
 
-<!-- ============ SCREEN: offline ============ -->
-<div id="scr-off" class="center-screen">
+<!-- ================= SETUP (first-time admin claim) ================= -->
+<div class="center-screen" id="scrSetup">
   <div class="center-box">
-    <div style="text-align:center;font-size:38px">🔌</div>
-    <h2 style="text-align:center;font-size:19px;margin:8px 0 12px">সার্ভার কানেক্ট হচ্ছে না</h2>
-    <p class="small dim" style="line-height:1.8">
-      এই প্যানেল (GitHub Pages) শুধু একটা রিমোট। আসল ডেটা আসে <b style="color:var(--tx)">তোমার পিসির সার্ভার</b> থেকে —
-      কারণ Firebase-এর মাস্টার কী (admin-sdk-key.json) কখনোই কোনো পাবলিক ওয়েবসাইটে রাখা যায় না।
-      তাই প্যানেল খোলার আগে পিসিতে অ্যাপের সার্ভারটা চালু থাকতে হবে:
+    <div style="text-align:center;font-size:40px">🔑</div>
+    <h1 style="font-size:17px;text-align:center;margin-top:6px">প্রথমবারের সেটআপ</h1>
+    <p class="tiny dim" style="text-align:center;margin-top:4px;line-height:1.7">
+      সাইন-ইন হয়েছে: <b id="stEmail" class="mono"></b><br />
+      এখন নিরাপত্তা পিনটা দাও — এটা জানে শুধু মালিক। মিললে এই অ্যাকাউন্টটাই চিরতরে অ্যাডমিন হয়ে যাবে।
     </p>
-    <div style="background:var(--card2);border-radius:14px;padding:13px;margin-top:13px" class="small dim">
-      <ol class="steps">
-        <li>পিসিতে প্রজেক্ট ফোল্ডার ওপেন করো → টার্মিনালে <span class="mono">bun run dev</span> লিখে এন্টার (লেখা দেখাবে: <span class="mono">localhost:3000</span>)</li>
-        <li>নিচের ঠিকানাটা ঠিক আছে কিনা দেখো</li>
-        <li>তারপর আবার চেষ্টা করো</li>
-      </ol>
+    <div style="margin-top:18px">
+      <input id="stPin" class="field mono" type="password" inputmode="numeric" placeholder="নিরাপত্তা পিন (ডিফল্ট ৭৫৫)" />
+      <button id="stBtn" class="btn btn-em" style="width:100%;margin-top:12px;min-height:46px">✅ অ্যাডমিন হিসেবে দাবি করো</button>
+      <p class="err" id="stErr"></p>
+      <p class="note">পিন জানা না থাকলে ঢুকতে পারবে না — এটাই নিরাপত্তা। পিন ভুলে গেলে ডিফল্ট 755 দিয়ে দেখো।</p>
     </div>
-    <div class="rowline" style="margin-top:13px">
-      <span class="lb">সার্ভার</span>
-      <input id="offUrl" class="field mono" placeholder="http://localhost:3000" />
-      <button class="btn btn-gray" style="flex-shrink:0" onclick="saveBase('#offUrl')">সেভ</button>
-    </div>
-    <div class="flexend"><button class="btn btn-em" onclick="boot()">🔄 আবার চেষ্টা করো</button></div>
   </div>
 </div>
 
-<!-- ============ SCREEN: login ============ -->
-<div id="scr-login" class="center-screen">
-  <div class="center-box">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div style="width:48px;height:48px;border-radius:14px;background:var(--embg);border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;font-size:24px">🛡️</div>
-      <div>
-        <h2 style="font-size:17px">অ্যাডমিন প্যানেল</h2>
-        <p class="tiny dim">আওয়ার হ্যাবিট — মালিকের কন্ট্রোল রুম (ওয়েব)</p>
-      </div>
-    </div>
-    <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" class="field" style="text-align:center;font-size:20px;letter-spacing:6px" placeholder="পিন দাও" onkeydown="if(event.key==='Enter')doLogin()" />
-    <p id="loginErr" class="err"></p>
-    <button id="loginBtn" class="btn btn-em" style="width:100%;margin-top:6px;font-size:15px;padding:13px" onclick="doLogin()">ঢুকো</button>
-    <p class="tiny dim" style="text-align:center;margin-top:13px">
-      সার্ভার: <span id="loginBase" class="mono" style="color:var(--em300)"></span>
-      · <a href="#" style="color:var(--sky)" onclick="toggleBaseEdit();return false">বদলানো</a>
-    </p>
-    <div id="baseEdit" class="rowline hide" style="margin-top:9px">
-      <input id="loginUrl" class="field mono" placeholder="http://localhost:3000" />
-      <button class="btn btn-gray" style="flex-shrink:0" onclick="saveBase('#loginUrl')">সেভ</button>
-    </div>
+<!-- ================= BLOCKED (not admin) ================= -->
+<div class="center-screen" id="scrBlocked">
+  <div class="center-box" style="text-align:center">
+    <div style="font-size:40px">⛔</div>
+    <h1 style="font-size:17px;margin-top:6px">এই অ্যাকাউন্ট অ্যাডমিন না</h1>
+    <p class="tiny dim" id="blMsg" style="margin-top:8px;line-height:1.8"></p>
+    <button id="blOut" class="btn btn-gray" style="margin-top:16px">বেরিয়ে যাও / অন্য অ্যাকাউন্ট</button>
   </div>
 </div>
-<!-- ============ SCREEN: app (dashboard) ============ -->
-<div id="scr-app" class="screen">
+
+<!-- ================= BOOT / LOADING ================= -->
+<div class="center-screen" id="scrBoot">
+  <div class="center-box" style="text-align:center">
+    <div style="font-size:38px" class="spin">🛡️</div>
+    <p class="small dim" id="bootMsg" style="margin-top:10px">কানেক্ট হচ্ছে…</p>
+    <p class="err" id="bootErr" style="line-height:1.8;text-align:left"></p>
+  </div>
+</div>
+
+<!-- ================= PANEL ================= -->
+<div class="screen" id="scrPanel">
   <header>
     <div class="wrap hd">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0">
-        <span style="font-size:20px">🛡️</span>
-        <div style="min-width:0">
-          <h1>অ্যাডমিন প্যানেল — আওয়ার হ্যাবিট</h1>
-          <p class="sub" id="hdSub">ওয়েব প্যানেল · GitHub Pages</p>
-        </div>
+      <div style="min-width:0">
+        <h1>🛡️ অ্যাডমিন প্যানেল <span class="chip chip-ok">ক্লাউড v4</span></h1>
+        <p class="sub mono" id="hdWho">—</p>
       </div>
       <div class="tabs">
-        <button class="tab active" id="tab-users" onclick="setTab('users')">👥 ইউজার</button>
-        <button class="tab" id="tab-ads" onclick="setTab('ads')">📢 অ্যাডস</button>
-        <button class="tab" id="tab-set" onclick="setTab('set')">⚙️ সেটিংস</button>
-        <button class="tab" style="background:rgba(244,63,94,.15);color:var(--rose)" onclick="doLogout()">বাইরে</button>
+        <button class="tab active" data-t="users" onclick="goTab('users')">👥 ইউজার</button>
+        <button class="tab" data-t="ads" onclick="goTab('ads')">📢 অ্যাডস</button>
+        <button class="tab" data-t="set" onclick="goTab('set')">⚙️ সেটিংস</button>
       </div>
     </div>
   </header>
 
-  <main class="wrap" style="padding:16px 14px 40px">
-
-    <!-- ================= USERS TAB ================= -->
-    <section id="pane-users">
-      <div class="stats" id="statsRow"></div>
-      <div class="grow" style="margin-bottom:12px">
-        <input id="searchBox" class="field" style="flex:1;min-width:200px" placeholder="🔍 নাম বা ইমেইল খোঁজো…" oninput="renderUsers()" />
-        <button class="tab" id="f-all" onclick="setFilter('all')">সব</button>
-        <button class="tab" id="f-google" onclick="setFilter('google')">🔵 Google</button>
-        <button class="tab" id="f-email" onclick="setFilter('email')">✉️ ইমেইল</button>
-        <button class="tab" id="f-banned" onclick="setFilter('banned')">🚫 ব্যান</button>
-        <button class="tab" onclick="loadUsers()">🔄 রিফ্রেশ</button>
+  <main class="wrap" style="padding-bottom:40px">
+    <!-- ---------- USERS TAB ---------- -->
+    <section id="tabUsers">
+      <div class="stats" id="statCards"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <input id="qBox" class="field" style="flex:1;min-width:180px" placeholder="🔍 নাম বা ইমেইল খোঁজো…" oninput="S.q=this.value;renderUsers()" />
+        <button class="btn btn-gray" onclick="loadUsers(true)" id="reloadBtn">↻ রিফ্রেশ</button>
       </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="filters"></div>
       <div class="tblwrap">
         <table>
-          <thead>
-            <tr>
-              <th>নাম</th><th>ইমেইল</th><th>ধরন</th><th>স্ট্যাটাস</th>
-              <th>নামাজ (আজ)</th><th>পানি</th><th>রিলস</th><th>স্ট্রিক</th><th>শেষ অ্যাক্টিভ</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="usersBody">
-            <tr><td colspan="10" style="text-align:center;padding:36px" class="dim spin">লোড হচ্ছে…</td></tr>
-          </tbody>
+          <thead><tr><th>নাম</th><th>ইমেইল</th><th>ধরন</th><th>স্ট্যাটাস</th><th>আজ (নামাজ/পানি/রিলস)</th><th>🔥</th><th>শেষ অ্যাক্টিভ</th><th></th></tr></thead>
+          <tbody id="userRows"></tbody>
         </table>
       </div>
-      <p class="tiny dim" style="margin-top:10px;line-height:1.7" id="usersCount"></p>
+      <p class="err" id="usersErr" style="text-align:left;line-height:1.9"></p>
+      <p class="note">সারিতে চাপ দিলে ওই ইউজারের ১৪ দিনের পুরো রিপোর্ট + অ্যাকশন খুলবে। "ধরন" দেখায় Google / ইমেইল — পুরনো ইউজার (v3.2-এর আগের APK) নতুন APK-তে ঢুকলেই অটো ভরতে শুরু হবে।</p>
     </section>
 
-    <!-- ================= ADS TAB ================= -->
-    <section id="pane-ads" class="hide" style="max-width:760px">
-      <div class="sec" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-        <div>
-          <h2 style="margin:0">📢 অ্যাডস মাস্টার সুইচ</h2>
-          <p class="tiny dim" style="margin-top:2px">বন্ধ করলে সব অ্যাপে সব অ্যাড উঠে যাবে</p>
-        </div>
-        <button class="toggle" id="adsMaster" onclick="toggleMaster()"></button>
-      </div>
-
+    <!-- ---------- ADS TAB ---------- -->
+    <section id="tabAds" class="hide">
       <div class="sec">
-        <h2>🎯 Adsterra জোনস</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div>
+            <h2 style="margin-bottom:2px">📢 মাস্টার সুইচ</h2>
+            <p class="tiny dim">বন্ধ করলে সব অ্যাপে সব অ্যাড উঠে যাবে (৫ মিনিটে)</p>
+          </div>
+          <button class="toggle" id="adsMaster" onclick="toggleMaster()"></button>
+        </div>
+      </div>
+      <div class="sec">
+        <h2>🎯 AdMob আইডি</h2>
+        <div class="rowline"><span class="lb">ব্যানার</span><input id="amBanner" class="field mono" placeholder="ca-app-pub-…" /></div>
+        <div class="rowline"><span class="lb">নেটিভ</span><input id="amNative" class="field mono" placeholder="ca-app-pub-…" /></div>
+        <div class="rowline"><span class="lb">রিওয়ার্ডেড</span><input id="amRewarded" class="field mono" placeholder="ca-app-pub-…" /></div>
+      </div>
+      <div class="sec">
+        <h2>⚡ Adsterra জোন</h2>
         <div id="zonesBox"></div>
       </div>
-
-      <div class="sec">
-        <h2>📱 AdMob (অ্যাপের জন্য)</h2>
-        <div class="rowline"><span class="lb">ব্যানার আইডি</span><input id="amBanner" class="field mono" placeholder="ca-app-pub-…" /></div>
-        <div class="rowline"><span class="lb">নেটিভ আইডি</span><input id="amNative" class="field mono" placeholder="ca-app-pub-…" /></div>
-        <div class="rowline" style="margin:0"><span class="lb">রিওয়ার্ডেড আইডি</span><input id="amRewarded" class="field mono" placeholder="ca-app-pub-…" /></div>
-      </div>
-
       <div class="sec">
         <h2>🔄 অটো-আপডেট</h2>
-        <div class="rowline"><span class="lb">নতুন ভার্সন</span><input id="upVersion" class="field" placeholder="যেমন 3.1.0" /></div>
-        <div class="rowline"><span class="lb">APK লিংক</span><input id="upApk" class="field mono" placeholder="https://…apk" /></div>
-        <div class="rowline"><span class="lb" style="align-self:flex-start;padding-top:9px">চেঞ্জলগ</span><textarea id="upChg" class="field" rows="3" placeholder="নতুন কী এসেছে…"></textarea></div>
-        <label style="display:flex;align-items:center;gap:9px;cursor:pointer">
-          <input type="checkbox" id="upForce" style="width:17px;height:17px;accent-color:var(--em600)" />
-          <span class="small">জোর করে আপডেট (না করলে অ্যাপ খুলবে না)</span>
-        </label>
+        <div class="rowline"><span class="lb">ভার্সন</span><input id="upVersion" class="field mono" placeholder="যেমন 3.2.0" /></div>
+        <div class="rowline"><span class="lb">APK লিংক</span><input id="upApk" class="field mono" placeholder="https://…/OurHabit.apk" /></div>
+        <div style="margin:8px 0"><textarea id="upChg" class="field" rows="2" placeholder="চেঞ্জলগ — নতুন ভার্সনে কী কী এসেছে"></textarea></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div>
+            <p class="small" style="font-weight:700">জোর করে আপডেট</p>
+            <p class="tiny dim">চালু করলে পুরনো ভার্সনের ইউজার আপডেট ছাড়া অ্যাপ চালাতে পারবে না</p>
+          </div>
+          <button class="toggle" id="upForce" onclick="this.classList.toggle('on')"></button>
+        </div>
       </div>
-
       <div class="stickybar">
-        <button class="btn btn-em" style="flex:1;padding:13px" onclick="saveAds()">💾 সেভ করো — সব অ্যাপে যাবে</button>
-        <p id="adsMsg" class="msg" style="max-width:50%;margin:0"></p>
+        <p class="small" style="flex:1" id="adsMsg">সব সেভ হলে ইনস্টল করা সব অ্যাপ ৫ মিনিটের মধ্যে পেয়ে যায়।</p>
+        <button class="btn btn-em" onclick="saveAds()">💾 সেভ করো</button>
       </div>
     </section>
 
-    <!-- ================= SETTINGS TAB ================= -->
-    <section id="pane-set" class="hide" style="max-width:640px">
+    <!-- ---------- SETTINGS TAB ---------- -->
+    <section id="tabSet" class="hide">
       <div class="sec">
-        <h2>🔐 অ্যাডমিন পিন</h2>
-        <div id="pinDefaultWarn" class="amber hide" style="margin-bottom:12px">
-          ⚠️ এখনো <b>ডিফল্ট পিন</b> চালু আছে — যেটা আমি তোমাকে দিয়েছিলাম। একবার বদলে নিলে প্যানেলটা শুধু তোমার।
-        </div>
-        <div class="rowline"><span class="lb">এখনকার পিন</span><input id="curPin" type="password" class="field" placeholder="এখন যেটা দিয়ে ঢুকো" /></div>
-        <div class="rowline" style="margin:0"><span class="lb">নতুন পিন</span><input id="newPin" type="password" class="field" placeholder="৩–১২ অক্ষর" /></div>
-        <div class="flexend">
-          <button class="btn btn-em" id="pinBtn" onclick="changePin()">পিন বদলাও</button>
-        </div>
-        <p id="pinMsg" class="msg"></p>
-        <p class="note">পিন বদলালে সাথে সাথে লগইন ঠিকই থাকবে — নতুন টোকেন নিয়ে নেওয়া হয়ে যাবে। পরের বার থেকে নতুন পিনটাই লাগবে।</p>
+        <h2>👤 অ্যাডমিন অ্যাকাউন্ট</h2>
+        <div class="idbox small" id="setInfo"></div>
+        <button class="btn btn-gray" onclick="doSignOut()">🚪 বেরিয়ে যাও (সাইন আউট)</button>
       </div>
-
       <div class="sec">
-        <h2>🌐 সার্ভার</h2>
-        <p class="small dim" style="margin-bottom:10px;line-height:1.8">
-          এই প্যানেলটা GitHub Pages-এ থাকে, কিন্তু ডেটা আসে তোমার পিসির সার্ভার থেকে (default:
-          <span class="mono">http://localhost:3000</span>)। কারণ সার্ভারে Firebase-এর মাস্টার কী আছে —
-          সেটা কখনো পাবলিক ওয়েবসাইটে রাখা যায় না। পিসিতে <span class="mono">bun run dev</span> চালু থাকলেই প্যানেল কাজ করবে।
+        <h2>🧭 এই প্যানেলে যা যা সম্ভব (পিসি ছাড়া)</h2>
+        <p class="small dim" style="line-height:2">
+          ✅ সব ইউজার দেখা + কে Google, কে ইমেইল<br />
+          ✅ প্রত্যেকের ১৪ দিনের রিয়েল রিপোর্ট (নামাজ/পানি/রিলস/যিকির)<br />
+          ✅ ব্যান / আনব্যান — ব্যান হলে অ্যাপ নিজেই বন্ধ হয়ে যায় (v3.2+ APK)<br />
+          ✅ পাসওয়ার্ড রিসেট মেইল পাঠানো<br />
+          ✅ অ্যাডস + অটো-আপডেট কন্ট্রোল<br />
+          ❌ সরাসরি পাসওয়ার্ড বসিয়ে দেওয়া — বদলে রিসেট মেইল ব্যবহার করো<br />
+          ❌ Firebase-এর অ্যাকাউন্ট স্তরে ডিলিট — বদলে ব্যান করো
         </p>
-        <div class="rowline" style="margin:0">
-          <span class="lb">ঠিকানা</span>
-          <input id="setUrl" class="field mono" placeholder="http://localhost:3000" />
-          <button class="btn btn-gray" style="flex-shrink:0" onclick="saveBase('#setUrl')">সেভ ও কানেক্ট</button>
-        </div>
+        <p class="note">পুরনো "পিন 755" পদ্ধতি ছিল পিসি-সার্ভার প্যানেলের জন্য — এই ক্লাউড প্যানেলে লগইন হয় তোমার নিজের ইমেইল+পাসওয়ার্ড দিয়ে, আর প্রথম সেটআপে পিন দিয়ে অ্যাডমিন দাবি হয়।</p>
       </div>
-
       <div class="sec">
-        <h2>ℹ️ কীভাবে কাজ করে</h2>
-        <ol class="steps small dim" style="line-height:1.9">
-          <li>এই ফাইলটা (<span class="mono">index.html</span>) GitHub রিপোতে থাকে → GitHub Pages সেটা চালায়।</li>
-          <li>পিন দিলে সেটা যায় তোমার পিসির সার্ভারে (<span class="mono">/api/admin/session</span>) — সার্ভার হ্যাশ করে মিলিয়ে দেখে, তারপর টোকেন দেয়।</li>
-          <li>সেই টোকেন দিয়েই প্যানেল ইউজার লিস্ট, স্ট্যাটাস, ব্যান/আনব্যান, পাসওয়ার্ড, অ্যাডস — সব কমান্ড চালায়।</li>
-          <li>পিন কখনো পেজের কোডে লেখা থাকে না — তাই পেজ পাবলিক হলেও তোমার পিন তোমার কাছেই থাকে।</li>
-        </ol>
+        <h2>🔐 নিরাপত্তা</h2>
+        <p class="small dim" style="line-height:2">
+          • লগইন Firebase Authentication-এ হয় — পাসওয়ার্ড কোথাও জমা থাকে না, Google-এর সার্ভারেই যাচাই হয়।<br />
+          • অ্যাডমিন ক্ষমতা Firestore rules দিয়ে তালাবন্ধ — শুধু তোমার UID-ই লিখতে পারে।<br />
+          • প্যানেলটা পাবলিক লিংকে থাকলেও পিন ছাড়া কেউ অ্যাডমিন হতে পারবে না, আর অ্যাডমিন হয়েও ডেটা পড়তে পারবে না (rules)।<br />
+          • চাইলে Settings-এ থাকা তোমার Firebase অ্যাকাউন্টের পাসওয়ার্ড মাঝে মাঝে বদলে নিও।
+        </p>
       </div>
     </section>
   </main>
 </div>
 
-<!-- ============ USER DETAIL MODAL ============ -->
+<!-- ================= USER DETAIL MODAL ================= -->
 <div id="modalBack">
   <div class="modal">
     <div class="mhead">
-      <b style="font-size:14px">👤 ইউজারের পুরো রিপোর্ট</b>
-      <button class="btn btn-gray" style="padding:5px 11px;font-weight:800" onclick="closeModal()">✕</button>
+      <div style="min-width:0"><h2 id="mdName" style="font-size:15px">—</h2><p class="tiny dim mono" id="mdMail">—</p></div>
+      <button class="btn btn-gray" onclick="closeModal()">✕</button>
     </div>
-    <div class="mbody" id="detailBox"><p class="dim spin" style="text-align:center;padding:30px">লোড হচ্ছে…</p></div>
+    <div class="mbody" id="mdBody">…</div>
   </div>
 </div>
-<script>
-"use strict";
-/* ================================================================
-   আওয়ার হ্যাবিট — ওয়েব অ্যাডমিন প্যানেল (এক ফাইলের প্যানেল, v3.1)
-   GitHub Pages-এ থাকে; ডেটা আসে মালিকের পিসির সার্ভার থেকে
-   (bun run dev → localhost:3000)। লগইন = মালিকের পিন (ডিফল্ট 755) →
-   সার্ভার ভেরিফাই করে Bearer টোকেন দেয় → টোকেন দিয়েই সব কমান্ড।
-   ================================================================ */
 
-var LS_BASE = "oh_webadmin_base", LS_TOKEN = "oh_webadmin_token";
+<script type="module" id="main-js">
+/* ============ v4.0 CLOUD PANEL — talks STRAIGHT to Firestore, no server ============ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+  sendPasswordResetEmail,
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-var AT_ZONES = [
+// তোমার নিজের Firebase প্রজেক্ট (অ্যাপের সাথে একটাই — কনফিগ পাবলিক হওয়াটাই স্বাভাবিক,
+// আসল তালা হলো Firebase Auth + Firestore rules)
+const FB = {
+  apiKey: "AIzaSyAfnGjQ22LCDaJTDqj2cogaQ8NkLd1FdSY",
+  authDomain: "our-habit-61587.firebaseapp.com",
+  projectId: "our-habit-61587",
+  storageBucket: "our-habit-61587.firebasestorage.app",
+  messagingSenderId: "570611135763",
+  appId: "1:570611135763:web:11f7f2bf7a5f20825696e6",
+};
+const app = initializeApp(FB);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// পুরনো পিন-যাচাইয়ের সাথে হুবহু এক অ্যালগরিদম (server: sha256("PIN::ourhabit::webadmin"))
+const PIN_SALT = "ourhabit::webadmin";
+const PIN_DEFAULT = "755";
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const S = {
+  me: null,          // {uid, email}
+  meta: null,        // app/meta doc
+  admin: false,      // এই ব্রাউজারের অ্যাকাউন্ট অ্যাডমিন কিনা
+  users: [],
+  filter: "all",     // all | google | email | ban
+  q: "",
+  detailUid: null,
+  ads: null,
+  confirmKey: "",
+  loading: false,
+};
+
+/* ---------------- helpers ---------------- */
+async function sha256hex(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function showScr(id) {
+  document.querySelectorAll(".center-screen").forEach((x) => x.classList.remove("active"));
+  document.querySelectorAll(".screen").forEach((x) => x.classList.remove("active"));
+  const el = $("#" + id);
+  if (el) el.classList.add("active");
+}
+function errSet(id, text) {
+  const el = $("#" + id);
+  if (!el) return;
+  el.textContent = text || "";
+  el.classList.toggle("show", Boolean(text));
+}
+function tsDate(v) {
+  try {
+    if (!v) return "";
+    if (v.toDate) return v.toDate();
+    if (typeof v === "string" || typeof v === "number") return new Date(v);
+  } catch (e) {}
+  return null;
+}
+function fmtWhen(v) {
+  const d = tsDate(v);
+  if (!d || isNaN(d)) return "—";
+  return d.toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) + " " +
+         d.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" });
+}
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function summarizeLog(log) {
+  if (!log) return null;
+  const pr = log.prayers && typeof log.prayers === "object" ? log.prayers : {};
+  const prayers = ["fajr", "dhuhr", "asr", "maghrib", "isha"].map((k) => Boolean(pr[k]));
+  let dhikr = 0;
+  if (log.dhikr && typeof log.dhikr === "object") dhikr = Object.values(log.dhikr).reduce((a, b) => a + (Number(b) || 0), 0);
+  return {
+    prayers,
+    waterMl: Number(log.waterMl) || 0,
+    reelsMin: log.reelsMin === null || log.reelsMin === undefined ? null : (Number(log.reelsMin) || 0),
+    dhikr,
+    meditationMin: Number(log.meditationMin) || 0,
+    focusMin: Number(log.focusMin) || 0,
+  };
+}
+function authErrText(e) {
+  const c = String((e && e.code) || e || "");
+  if (c.includes("invalid-credential") || c.includes("wrong-password") || c.includes("user-not-found") || c.includes("invalid-login-credentials"))
+    return "ইমেইল বা পাসওয়ার্ড ভুল ❌";
+  if (c.includes("invalid-email")) return "ইমেইলটা ঠিক নেই";
+  if (c.includes("too-many-requests")) return "অনেকবার চেষ্টা হয়ে গেছে — কিছুক্ষণ পরে আবার করো";
+  if (c.includes("network")) return "ইন্টারনেট কানেকশন দেখো";
+  if (c.includes("unauthorized-domain"))
+    return "এই ডোমেইনটা Firebase-এ অনুমতি নেই। ফিক্স: Firebase Console → Authentication → Settings → Authorized domains → তোমার github.io ঠিকানা (যেমন nadiramoni.github.io) Add করো। বিস্তারিত গাইডে ধাপ ৩-এ আছে।";
+  if (c.includes("user-disabled")) return "এই অ্যাকাউন্ট ব্যান করা হয়েছে";
+  return "ঢোকা গেল না (" + c.slice(0, 60) + ")";
+}
+
+/* ---------------- boot: who am I ---------------- */
+async function route() {
+  if (!S.me) { showScr("scrLogin"); return; }
+  $("#bootMsg").textContent = "অ্যাডমিন তথ্য চেক হচ্ছে…";
+  showScr("scrBoot");
+  let meta = null;
+  try {
+    const snap = await getDoc(doc(db, "app", "meta"));
+    meta = snap.exists() ? snap.data() : {};
+  } catch (e) {
+    errSet("bootErr", "Firestore পড়া গেল না: " + String((e && e.code) || e).slice(0, 120) +
+      " — ইন্টারনেট দেখো, অথবা Firebase Console-এ rules দেখো (গাইড ধাপ ৪)।");
+    return;
+  }
+  S.meta = meta || {};
+  const claimed = typeof S.meta.adminUid === "string" && S.meta.adminUid;
+  if (!claimed) {
+    // প্রথমবার — পিন দিয়ে দাবি করতে হবে
+    $("#stEmail").textContent = S.me.email || S.me.uid;
+    $("#stPin").value = "";
+    errSet("stErr", "");
+    showScr("scrSetup");
+    return;
+  }
+  if (claimed === S.me.uid) { enterPanel(); return; }
+  $("#blMsg").innerHTML = "এই প্যানেলের অ্যাডমিন অন্য অ্যাকাউন্ট (<span class='mono'>" + esc(String(S.meta.adminEmail || "…")).slice(0, 40) + "</span>)। ওই অ্যাকাউন্ট দিয়েই ঢুকো — অথবা পিসির localhost প্যানেল থেকে adminUid রিসেট করো।";
+  showScr("scrBlocked");
+}
+
+/* ---------------- login / setup / blocked ---------------- */
+$("#lgBtn").addEventListener("click", async () => {
+  errSet("lgErr", "");
+  const email = $("#lgEmail").value.trim();
+  const pass = $("#lgPass").value;
+  if (!email || !pass) return errSet("lgErr", "ইমেইল আর পাসওয়ার্ড দুটোই দাও");
+  const btn = $("#lgBtn"); btn.disabled = true; btn.textContent = "⏳ ঢোকা হচ্ছে…";
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    // onAuthStateChanged এখন নিজে থেকেই route() চালাবে
+  } catch (e) {
+    errSet("lgErr", authErrText(e));
+    btn.disabled = false; btn.textContent = "🔐 ইমেইল + পাসওয়ার্ড দিয়ে ঢুকো";
+  }
+});
+$("#stBtn").addEventListener("click", async () => {
+  errSet("stErr", "");
+  const pin = $("#stPin").value.trim();
+  if (!pin) return errSet("stErr", "পিনটা লিখো");
+  const btn = $("#stBtn"); btn.disabled = true; btn.textContent = "⏳ যাচাই হচ্ছে…";
+  try {
+    const h = await sha256hex(pin + "::" + PIN_SALT);
+    const stored = (typeof S.meta.webAdminPinHash === "string" && S.meta.webAdminPinHash)
+      ? S.meta.webAdminPinHash
+      : await sha256hex(PIN_DEFAULT + "::" + PIN_SALT);
+    if (h !== stored) throw { code: "pin-wrong" };
+    await setDoc(doc(db, "app", "meta"), {
+      adminUid: S.me.uid,
+      adminEmail: S.me.email || "",
+      adminClaimedAt: serverTimestamp(),
+    }, { merge: true });
+    S.meta.adminUid = S.me.uid;
+    enterPanel();
+  } catch (e) {
+    const c = String((e && e.code) || e);
+    errSet("stErr", c.includes("pin-wrong") ? "পিন মিলছে না ❌ — ডিফল্ট 755 দিয়ে দেখো" : "হয়নি: " + c.slice(0, 100));
+    btn.disabled = false; btn.textContent = "✅ অ্যাডমিন হিসেবে দাবি করো";
+  }
+});
+$("#blOut").addEventListener("click", () => doSignOut());
+$("#stPin").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#stBtn").click(); });
+$("#lgPass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#lgBtn").click(); });
+
+async function doSignOut() {
+  try { await signOut(auth); } catch (e) {}
+  S.me = null; S.admin = false; S.users = []; S.ads = null;
+  $("#lgPass").value = "";
+  const btn = $("#lgBtn"); btn.disabled = false; btn.textContent = "🔐 ইমেইল + পাসওয়ার্ড দিয়ে ঢুকো";
+  showScr("scrLogin");
+}
+
+onAuthStateChanged(auth, (u) => {
+  S.me = u ? { uid: u.uid, email: u.email || "" } : null;
+  if (u) void route();
+  else showScr("scrLogin");
+});
+
+/* ---------------- panel ---------------- */
+function enterPanel() {
+  S.admin = true;
+  $("#hdWho").textContent = (S.me.email || S.me.uid) + " · অ্যাডমিন ✅";
+  renderSetInfo();
+  goTab("users");
+  showScr("scrPanel");
+  void loadUsers();
+}
+window.goTab = (t) => {
+  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.t === t));
+  $("#tabUsers").classList.toggle("hide", t !== "users");
+  $("#tabAds").classList.toggle("hide", t !== "ads");
+  $("#tabSet").classList.toggle("hide", t !== "set");
+  if (t === "ads" && !S.ads) void loadAds();
+  if (t === "set") renderSetInfo();
+};
+function renderSetInfo() {
+  const claimedAt = S.meta ? fmtWhen(S.meta.adminClaimedAt) : "—";
+  $("#setInfo").innerHTML =
+    "ইমেইল: <b>" + esc(S.me && S.me.email ? S.me.email : "—") + "</b><br />" +
+    "UID: <span class='mono tiny'>" + esc(S.me ? S.me.uid : "—") + "</span><br />" +
+    "অ্যাডমিন হয়েছো: " + esc(claimedAt) + "<br />" +
+    "নিয়ন্ত্রণ: Firestore (তোমার নিজের Firebase প্রজেক্ট)";
+}
+window.doSignOut = doSignOut;
+
+/* ================= USERS ================= */
+const FILTERS = [
+  { k: "all", l: "সব" }, { k: "google", l: "Google" }, { k: "email", l: "ইমেইল" },
+  { k: "ban", l: "ব্যান হওয়া" },
+];
+async function loadUsers(manual) {
+  if (S.loading || !S.admin) return;
+  S.loading = true;
+  const btn = $("#reloadBtn"); if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin">↻</span> আসছে…'; }
+  errSet("usersErr", "");
+  try {
+    const snap = await getDocs(collection(db, "usersIndex"));
+    const rows = snap.docs.map((d) => Object.assign({ uid: d.id }, d.data()));
+    // merge backups (summary + logs) in gentle chunks
+    for (let i = 0; i < rows.length; i += 12) {
+      await Promise.all(rows.slice(i, i + 12).map(async (r) => {
+        try {
+          const b = await getDoc(doc(db, "backups", r.uid));
+          if (!b.exists()) return;
+          const d = b.data() || {};
+          const st = d.state || {};
+          const logs = st.logs || {};
+          const dates = Object.keys(logs).sort();
+          const tk = todayKey();
+          r.lastActive = d.updatedAt || null;
+          r.days = dates.length;
+          r.streak = Number((st.settings || {}).streak ?? st.streak ?? 0) || 0;
+          r.today = summarizeLog(logs[tk]);
+          r.lastDay = dates.length ? Object.assign({ date: dates[dates.length - 1] }, summarizeLog(logs[dates[dates.length - 1]]) || {}) : null;
+        } catch (e) {
+          if (String((e && e.code) || "").includes("permission-denied")) r.rulesGap = true;
+        }
+      }));
+    }
+    S.users = rows;
+    renderUsers();
+    if (rows.some((r) => r.rulesGap)) {
+      errSet("usersErr", "⚠️ কিছু ইউজারের রিপোর্ট আসেনি — Firestore rules-এ অ্যাডমিন backups read অনুমতি নেই। গাইডের ধাপ ৪-এর rules পেস্ট করো।");
+    }
+  } catch (e) {
+    const c = String((e && e.code) || e);
+    errSet("usersErr", c.includes("permission-denied")
+      ? "⛔ Firestore অনুমতি দিচ্ছে না (permission-denied)। গাইডের ধাপ ৪-এর rules টা Firebase Console → Firestore Database → Rules-এ পেস্ট করে Publish করো, তারপর রিফ্রেশ দাও।"
+      : "লোড হয়নি: " + c.slice(0, 120));
+  } finally {
+    S.loading = false;
+    if (btn) { btn.disabled = false; btn.textContent = "↻ রিফ্রেশ"; }
+  }
+}
+window.loadUsers = loadUsers;
+function filtered() {
+  const q = (S.q || "").trim().toLowerCase();
+  return S.users.filter((r) => {
+    if (S.filter === "google" && r.provider !== "google") return false;
+    if (S.filter === "email" && r.provider !== "password") return false;
+    if (S.filter === "ban" && !r.banned) return false;
+    if (q && !((r.name || "") + " " + (r.email || "")).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+window.renderUsers = function () {
+  $("#filters").innerHTML = FILTERS.map((f) =>
+    '<button class="tab' + (S.filter === f.k ? " active" : "") + '" onclick="S.filter=\'' + f.k + '\';renderUsers()">' + f.l + "</button>"
+  ).join("");
+  const all = S.users;
+  const t = todayKey();
+  const stats = {
+    total: all.length,
+    google: all.filter((r) => r.provider === "google").length,
+    email: all.filter((r) => r.provider === "password").length,
+    active: all.filter((r) => r.today).length,
+    withApp: all.filter((r) => Number(r.days) > 0).length,
+    ban: all.filter((r) => r.banned).length,
+  };
+  $("#statCards").innerHTML = [
+    ["👥 মোট ইউজার", stats.total], ["🔵 Google", stats.google], ["✉️ ইমেইল", stats.email],
+    ["⚡ আজ অ্যাক্টিভ", stats.active], ["📈 অ্যাপ ব্যবহার করছে", stats.withApp], ["🚫 ব্যান", stats.ban],
+  ].map((x) => '<div class="stat"><p class="l">' + x[0] + '</p><p class="v">' + x[1] + "</p></div>").join("");
+  const rows = filtered();
+  if (!rows.length) {
+    $("#userRows").innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--tx2);padding:22px">কেউ নেই (এই ফিল্টারে)</td></tr>';
+    return;
+  }
+  $("#userRows").innerHTML = rows.map((r) => {
+    const prov = r.provider === "google" ? '<span class="chip chip-g">Google</span>'
+      : r.provider === "password" ? '<span class="chip chip-e">ইমেইল</span>'
+      : '<span class="chip chip-u">—</span>';
+    const st = r.banned ? '<span class="chip chip-ban">ব্যান</span>' : '<span class="chip chip-ok">সক্রিয়</span>';
+    const td = r.today;
+    const today = td
+      ? '<span style="color:' + (td.prayers.filter(Boolean).length === 5 ? "var(--em)" : "var(--tx)") + '">' + td.prayers.filter(Boolean).length + "/৫</span> · " + (td.waterMl || 0) + "ml · " + (td.reelsMin === null ? "—" : td.reelsMin + "m")
+      : '<span class="dim">অ্যাপ খোলেনি</span>';
+    return '<tr class="row" onclick="openDetail(\'' + esc(r.uid) + '\')">' +
+      '<td class="name">' + esc(r.name || "—") + "</td>" +
+      '<td class="mail">' + esc(r.email || "—") + "</td>" +
+      "<td>" + prov + "</td><td>" + st + "</td>" +
+      "<td>" + today + "</td>" +
+      "<td>" + (r.streak || 0) + "</td>" +
+      '<td class="small dim">' + (r.lastActive ? fmtWhen(r.lastActive) : "—") + "</td>" +
+      '<td><button class="btn btn-gray" style="padding:6px 10px">দেখো ›</button></td></tr>';
+  }).join("");
+};
+
+/* ================= DETAIL MODAL ================= */
+const DAY_COLS = [
+  { k: "fajr", l: "ফজর" }, { k: "dhuhr", l: "যোহর" }, { k: "asr", l: "আসর" },
+  { k: "maghrib", l: "মাগরিব" }, { k: "isha", l: "ইশা" },
+];
+window.openDetail = async function (uid) {
+  S.detailUid = uid;
+  S.confirmKey = "";
+  const r = S.users.find((x) => x.uid === uid) || { uid };
+  $("#mdName").textContent = r.name || "—";
+  $("#mdMail").textContent = r.email || "—";
+  $("#mdBody").innerHTML = '<p class="small dim">⏳ পুরো রিপোর্ট আসছে…</p>';
+  $("#modalBack").classList.add("open");
+  let logs = r.logs || null;
+  let days = r.days, streak = r.streak, lastActive = r.lastActive;
+  try {
+    const b = await getDoc(doc(db, "backups", uid));
+    if (b.exists()) {
+      const d = b.data() || {};
+      const st = d.state || {};
+      logs = st.logs || {};
+      days = Object.keys(logs).length;
+      streak = Number((st.settings || {}).streak ?? st.streak ?? 0) || 0;
+      lastActive = d.updatedAt || lastActive;
+    }
+  } catch (e) {}
+  const dates = logs ? Object.keys(logs).sort() : [];
+  const last14 = dates.slice(-14).reverse();
+  const p = (r.provider === "google" ? "Google" : r.provider === "password" ? "ইমেইল" : "—");
+  let html =
+    '<div class="idbox small">' +
+    "UID: <span class='mono'>" + esc(uid) + "</span><br />" +
+    "ধরন: <b>" + p + "</b> · ইনভাইট কোড: <b class='mono'>" + esc(r.inviteCode || "—") + "</b> · বন্ধু: <b>" + ((r.friends || []).length || 0) + "</b><br />" +
+    "রেকর্ড হওয়া দিন: <b>" + (days || 0) + "</b> · স্ট্রিক: <b>🔥 " + (streak || 0) + "</b> · শেষ অ্যাক্টিভ: <b>" + (lastActive ? fmtWhen(lastActive) : "—") + "</b>" +
+    (r.banned ? "<br /><span class='chip chip-ban'>এই অ্যাকাউন্ট ব্যান করা আছে</span>" : "") +
+    "</div>";
+  html += "<h2 style='font-size:13px;margin-bottom:8px'>📅 শেষ ১৪ দিনের রিয়েল স্ট্যাটাস</h2>";
+  if (!last14.length) {
+    html += '<p class="small dim">কোনো দিনের রেকর্ড নেই — ইউজার হয়তো অ্যাপে লগইন করে ডেটা সিঙ্ক করেনি।</p>';
+  } else {
+    html += '<div class="tblwrap" style="max-height:300px"><table class="daystbl" style="min-width:600px"><thead><tr>' +
+      "<th>দিন</th>" + DAY_COLS.map((c) => "<th>" + c.l + "</th>").join("") +
+      "<th>পানি</th><th>রিলস</th><th>যিকির</th><th>মেডি</th><th>ফোকাস</th></tr></thead><tbody>";
+    for (const d of last14) {
+      const s = summarizeLog(logs[d]);
+      html += "<tr><td class='mono tiny'>" + esc(d.slice(5)) + "</td>";
+      if (s) {
+        html += s.prayers.map((v) => "<td style='color:" + (v ? "var(--em)" : "var(--tx3)") + "'>" + (v ? "✓" : "–") + "</td>").join("");
+        html += "<td>" + (s.waterMl || 0) + "</td><td>" + (s.reelsMin === null ? "—" : s.reelsMin + "m") + "</td><td>" + s.dhikr + "</td><td>" + s.meditationMin + "m</td><td>" + s.focusMin + "m</td>";
+      } else {
+        html += "<td colspan='10' class='dim tiny'>রেকর্ড নেই</td>";
+      }
+      html += "</tr>";
+    }
+    html += "</tbody></table></div>";
+  }
+  const ck = S.confirmKey;
+  html += "<h2 style='font-size:13px;margin:14px 0 8px'>⚙️ অ্যাকশন</h2><div class='act'><div class='grow' id='actBox'>";
+  if (r.banned) {
+    html += "<button class='btn btn-em' onclick=\"actDo('unban')\">✅ আনব্যান করো</button>";
+  } else if (ck === "ban") {
+    html += "<button class='btn btn-red spin' onclick=\"actDo('ban')\">⚠️ হ্যাঁ, ব্যান করে দাও!</button> <button class='btn btn-gray' onclick=\"S.confirmKey='';openDetail('" + esc(uid) + "')\">না</button>";
+  } else {
+    html += "<button class='btn btn-rose' onclick=\"confirmOr('ban')\">🚫 ব্যান করো</button>";
+  }
+  html += "<button class='btn btn-gray' onclick=\"actDo('reset')\">✉️ পাসওয়ার্ড রিসেট মেইল</button>";
+  if (ck === "del") {
+    html += " <button class='btn btn-red spin' onclick=\"actDo('delData')\">⚠️ হ্যাঁ, ক্লাউড ডেটা মুছে দাও!</button> <button class='btn btn-gray' onclick=\"S.confirmKey='';openDetail('" + esc(uid) + "')\">না</button>";
+  } else {
+    html += " <button class='btn btn-rose' onclick=\"confirmOr('delData')\">🗑️ ক্লাউড ডেটা ডিলিট</button>";
+  }
+  html += "</div><p class='msg' id='actMsg'></p>" +
+    "<p class='note'>ব্যান = ওই ইউজারের অ্যাপ কয়েক মিনিটের মধ্যে বন্ধ হয়ে যাবে, আর লগইনে \"অ্যাকাউন্ট ব্যান করা হয়েছে\" দেখাবে (v3.2+ APK-তে)। রিসেট মেইল = Firebase ওর ইমেইলে সরাসরি রিসেট লিংক পাঠাবে। ক্লাউড ডেটা ডিলিট = ওর হ্যাবিট রেকর্ড মুছে যাবে (অ্যাকাউন্ট স্তরে ডিলিট ক্লাউড প্যানেলে সম্ভব না — ব্যান ব্যবহার করো)।</p></div>";
+  $("#mdBody").innerHTML = html;
+};
+window.confirmOr = (k) => { S.confirmKey = S.confirmKey === k ? "" : k; if (S.detailUid) openDetail(S.detailUid); };
+window.closeModal = () => { $("#modalBack").classList.remove("open"); S.detailUid = null; };
+window.actDo = async function (action) {
+  const uid = S.detailUid;
+  if (!uid) return;
+  const box = $("#actMsg");
+  const msg = (t, bad) => { if (!box) return; box.textContent = t; box.style.color = bad ? "var(--rose)" : ""; box.classList.add("show"); };
+  msg("⏳ হচ্ছে…");
+  try {
+    if (action === "ban" || action === "unban") {
+      await setDoc(doc(db, "usersIndex", uid), { banned: action === "ban", bannedAt: serverTimestamp() }, { merge: true });
+      msg(action === "ban" ? "🚫 ব্যান হয়ে গেছে — ইউজারের অ্যাপ কয়েক মিনিটে বন্ধ হবে" : "✅ আনব্যান হয়ে গেছে");
+    } else if (action === "reset") {
+      const r = S.users.find((x) => x.uid === uid);
+      if (!r || !r.email) { msg("এই ইউজারের ইমেইল নেই", true); return; }
+      await sendPasswordResetEmail(auth, r.email);
+      msg("✉️ রিসেট মেইল পাঠানো হয়েছে → " + r.email);
+    } else if (action === "delData") {
+      await deleteDoc(doc(db, "backups", uid));
+      msg("🗑️ ক্লাউড ডেটা মুছে গেছে");
+    }
+    await loadUsers();
+    if (S.detailUid) await openDetail(S.detailUid);
+  } catch (e) {
+    const c = String((e && e.code) || e);
+    msg(c.includes("permission-denied") ? "⛔ Firestore অনুমতি দিচ্ছে না — গাইডের ধাপ ৪-এর rules পেস্ট করো" : "হয়নি: " + c.slice(0, 100), true);
+  }
+};
+
+/* ================= ADS TAB ================= */
+const AT_ZONES = [
   { key: "bannerUpgrade", label: "⬆️ আপগ্রেড ব্যানার (সবার আগে দেখায়)", hint: "একটা ACTIVE ব্যানার জোনের GET CODE দাও" },
   { key: "banner300", label: "ব্যানার 300×250 (মোবাইল)", hint: "300x250 ব্যানার জোন" },
   { key: "banner728", label: "ব্যানার 728×90 (ট্যাবলেট/ডেস্কটপ)", hint: "728x90 ব্যানার জোন" },
   { key: "nativeBanner", label: "নেটিভ ব্যানার (কার্ডের ফাঁকে)", hint: "Native Banner জোন" },
   { key: "socialBar", label: "সোশ্যাল বার (ভাসমান)", hint: "Social Bar জোন — সবচেয়ে বেশি আয়" },
   { key: "smartlink", label: "স্মার্টলিংক বাটন", hint: "Direct Link জোন" },
-  { key: "popunder", label: "পপআন্ডার (ডিফল্ট বন্ধ)", hint: "খুললে নতুন ট্যাবে অ্যাড ওপেন হয়" }
+  { key: "popunder", label: "পপআন্ডার (ডিফল্ট বন্ধ)", hint: "খুললে নতুন ট্যাবে অ্যাড ওপেন হয়" },
 ];
-
-var state = {
-  base: "", token: "", webPin: null,
-  users: [], stats: null, ads: null,
-  filter: "all", tab: "users",
-  detail: null, detailUid: "", confirmKey: ""
-};
-
-/* ---------------- helpers ---------------- */
-function $(s) { return document.querySelector(s); }
-function esc(s) {
-  return String(s === null || s === undefined ? "" : s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
-function bn(n) {
-  if (n === null || n === undefined) return "—";
-  try { return new Intl.NumberFormat("bn-BD").format(n); } catch (e) { return String(n); }
-}
-function fmtDate(v) {
-  if (!v) return "—";
-  try {
-    var d = v instanceof Date ? v : new Date(String(v));
-    if (isNaN(d.getTime())) return String(v).slice(0, 16);
-    return d.toLocaleString("bn-BD", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  } catch (e) { return "—"; }
-}
-function timeAgo(v) {
-  if (!v) return "—";
-  try {
-    var d = v instanceof Date ? v : new Date(String(v));
-    var mins = Math.floor((Date.now() - d.getTime()) / 60000);
-    if (isNaN(mins)) return "—";
-    if (mins < 1) return "এখন";
-    if (mins < 60) return bn(mins) + " মিনিট আগে";
-    if (mins < 1440) return bn(Math.floor(mins / 60)) + " ঘণ্টা আগে";
-    return bn(Math.floor(mins / 1440)) + " দিন আগে";
-  } catch (e) { return "—"; }
-}
-function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
-
-/* ---------------- screens ---------------- */
-var SCREENS = ["scr-boot", "scr-nokey", "scr-off", "scr-login", "scr-app"];
-function show(id) {
-  SCREENS.forEach(function (x) { $("#" + x).classList.remove("active"); });
-  $("#" + id).classList.add("active");
-  window.scrollTo(0, 0);
-}
-function showLogin() {
-  state.token = ""; lsDel(LS_TOKEN);
-  $("#pinInput").value = ""; $("#loginErr").classList.remove("show");
-  show("scr-login");
-  setTimeout(function () { $("#pinInput").focus(); }, 60);
-}
-
-/* ---------------- server base ---------------- */
-function initialBase() {
-  var saved = lsGet(LS_BASE);
-  if (saved && /^https?:\/\//.test(saved)) return saved;
-  if (location.origin === "http://localhost:3000" || location.origin === "http://127.0.0.1:3000") return location.origin;
-  return "http://localhost:3000";
-}
-function toggleBaseEdit() {
-  var row = $("#baseEdit");
-  row.classList.toggle("hide");
-  if (!row.classList.contains("hide")) $("#loginUrl").value = state.base;
-}
-function saveBase(sel) {
-  var raw = String($(sel).value || "").trim();
-  if (!/^https?:\/\/.+/.test(raw)) { alert("পুরো ঠিকানা লিখো — যেমন http://localhost:3000"); return; }
-  raw = raw.replace(/\/+$/, "");
-  state.base = raw; lsSet(LS_BASE, raw);
-  $("#loginBase").textContent = raw; $("#offUrl").value = raw; $("#loginUrl").value = raw; $("#setUrl").value = raw;
-  boot();
-}
-
-/* ---------------- api ---------------- */
-async function api(path, opts) {
-  opts = opts || {};
-  var method = opts.method || "GET";
-  var headers = {};
-  if (opts.body !== undefined) headers["content-type"] = "application/json";
-  if (state.token) headers["authorization"] = "Bearer " + state.token;
-  var res;
-  try {
-    res = await fetch(state.base + path, {
-      method: method, headers: headers,
-      body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
-      cache: "no-store"
-    });
-  } catch (e) { throw { network: true }; }
-  var j = null;
-  try { j = await res.json(); } catch (e) {}
-  if (res.status === 401 && state.token) { showLogin(); throw { auth: true }; }
-  if (!res.ok) throw { status: res.status, data: j, network: false };
-  return j;
-}
-
-/* ---------------- boot + login ---------------- */
-async function boot() {
-  state.base = initialBase();
-  state.token = lsGet(LS_TOKEN) || "";
-  $("#loginBase").textContent = state.base;
-  $("#offUrl").value = state.base; $("#loginUrl").value = state.base; $("#setUrl").value = state.base;
-  show("scr-boot");
-  try {
-    var j = await api("/api/admin/session");
-    if (!j.keyReady) {
-      $("#nokeyHint").textContent = j.hint || "admin-sdk-key.json ফাইলটা পাওয়া যায়নি।";
-      show("scr-nokey"); return;
-    }
-    state.webPin = j.webPin || null;
-    if (j.authed) { enterApp(); return; }
-    state.token = ""; lsDel(LS_TOKEN);
-    showLogin();
-  } catch (e) {
-    if (e && e.auth) return;             // already pushed to login
-    show("scr-off");                     // network / server down
-  }
-}
-async function doLogin() {
-  var pin = $("#pinInput").value.trim();
-  var errEl = $("#loginErr");
-  errEl.classList.remove("show");
-  if (!pin) { errEl.textContent = "পিন লিখো"; errEl.classList.add("show"); return; }
-  var btn = $("#loginBtn"); btn.disabled = true; btn.textContent = "…";
-  try {
-    var j = await api("/api/admin/session", { method: "POST", body: { pin: pin } });
-    if (j && j.ok && j.token) {
-      state.token = j.token; lsSet(LS_TOKEN, j.token);
-      enterApp();
-    } else {
-      errEl.textContent = (j && j.message) || "লগইন হয়নি";
-      errEl.classList.add("show");
-    }
-  } catch (e) {
-    if (e && e.network) { show("scr-off"); return; }
-    if (e && e.auth) return;
-    var msg = e && e.data && e.data.message ? e.data.message : "লগইন হয়নি — পিন চেক করো";
-    errEl.textContent = msg; errEl.classList.add("show");
-  } finally {
-    btn.disabled = false; btn.textContent = "ঢুকো";
-  }
-}
-function doLogout() {
-  api("/api/admin/session", { method: "DELETE" }).catch(function () {});
-  showLogin();
-}
-function enterApp() {
-  show("scr-app");
-  $("#hdSub").textContent = "ওয়েব প্যানেল · " + state.base.replace(/^https?:\/\//, "");
-  $("#pinDefaultWarn").classList.toggle("hide", !(state.webPin && state.webPin.isDefault));
-  if (!state.users.length) loadUsers();
-  setTab("users");
-}
-
-/* ---------------- tabs ---------------- */
-function setTab(t) {
-  state.tab = t;
-  $("#tab-users").classList.toggle("active", t === "users");
-  $("#tab-ads").classList.toggle("active", t === "ads");
-  $("#tab-set").classList.toggle("active", t === "set");
-  $("#pane-users").classList.toggle("hide", t !== "users");
-  $("#pane-ads").classList.toggle("hide", t !== "ads");
-  $("#pane-set").classList.toggle("hide", t !== "set");
-  if (t === "ads" && !state.ads) loadAds();
-}
-function setFilter(f) {
-  state.filter = f;
-  ["all", "google", "email", "banned"].forEach(function (k) {
-    $("#f-" + k).classList.toggle("active", k === f);
-    $("#f-" + k).style.background = k === f ? "var(--em600)" : "";
-    $("#f-" + k).style.color = k === f ? "#fff" : "";
-  });
-  renderUsers();
-}
-
-/* ---------------- users ---------------- */
-async function loadUsers() {
-  var tb = $("#usersBody");
-  tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:34px" class="dim spin">লোড হচ্ছে…</td></tr>';
-  try {
-    var j = await api("/api/admin/users?pages=5");
-    state.users = j.users || []; state.stats = j.stats || null;
-    renderStats(); renderUsers();
-  } catch (e) {
-    if (e && e.auth) return;
-    tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px" class="err show">লোড হয়নি — সার্ভার চালু আছে তো?</td></tr>';
-  }
-}
-function renderStats() {
-  var s = state.stats || {};
-  var cards = [
-    { l: "👥 মোট ইউজার", v: s.total, c: "var(--tx)" },
-    { l: "🔵 Google (জিমেইল)", v: s.google, c: "var(--sky)" },
-    { l: "✉️ ইমেইল (ম্যানুয়াল)", v: s.email, c: "var(--em300)" },
-    { l: "⚡ আজ অ্যাক্টিভ", v: s.activeToday, c: "var(--amber)" },
-    { l: "📈 অ্যাপ ব্যবহার করছে", v: s.withApp, c: "var(--violet)" },
-    { l: "🚫 ব্যান হওয়া", v: s.banned, c: "var(--rose)" }
-  ];
-  $("#statsRow").innerHTML = cards.map(function (c) {
-    return '<div class="stat"><p class="l">' + c.l + '</p><p class="v" style="color:' + c.c + '">' + bn(c.v || 0) + "</p></div>";
-  }).join("");
-  $("#usersCount").textContent =
-    "মোট " + bn(state.users.length) + " অ্যাকাউন্ট লোড হয়েছে (প্রথম ৫০০) · সারিতে চাপলে ওই ইউজারের ১৪ দিনের পুরো রিপোর্ট + ব্যান/পাসওয়ার্ড/ডিলিট অপশন আসবে";
-}
-function prayerCell(u) {
-  if (u.today) return '<span class="mono">' + bn(u.today.prayers) + "/৫</span>";
-  if (u.lastDay) return '<span class="mono dim" title="শেষ লগ ' + esc(u.lastDay.date) + '">' + bn(u.lastDay.prayers) + "/৫</span>";
-  return "—";
-}
-function renderUsers() {
-  var q = String($("#searchBox").value || "").trim().toLowerCase();
-  var list = state.users.filter(function (u) {
-    if (state.filter === "google" && u.provider !== "google") return false;
-    if (state.filter === "email" && u.provider !== "password") return false;
-    if (state.filter === "banned" && !u.disabled) return false;
-    if (!q) return true;
-    return (u.name || "").toLowerCase().indexOf(q) >= 0 || (u.email || "").toLowerCase().indexOf(q) >= 0;
-  });
-  if (!list.length) {
-    $("#usersBody").innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px" class="dim">কেউ পাওয়া যায়নি</td></tr>';
-    return;
-  }
-  $("#usersBody").innerHTML = list.map(function (u) {
-    var reels = u.today && u.today.reelsMin !== null && u.today.reelsMin !== undefined
-      ? '<span class="' + (u.today.reelsMin > 60 ? "mono" : "mono dim") + '"' + (u.today.reelsMin > 60 ? ' style="color:var(--rose);font-weight:800"' : "") + ">" + bn(u.today.reelsMin) + "মি</span>"
-      : "—";
-    return "<tr class=\"row\" onclick=\"openDetail('" + esc(u.uid) + "')\">" +
-      '<td><span class="name">' + esc(u.name || "—") + "</span></td>" +
-      '<td><span class="mail">' + esc(u.email || "—") + "</span></td>" +
-      "<td>" + (u.provider === "google" ? "🔵 Google" : "✉️ ইমেইল") + "</td>" +
-      "<td>" + (u.disabled ? '<span class="chip chip-ban">🚫 ব্যান</span>' : '<span class="chip chip-ok">✅ সক্রিয়</span>') + "</td>" +
-      "<td>" + prayerCell(u) + "</td>" +
-      '<td><span class="mono dim">' + (u.today ? bn(u.today.waterMl) + "মি°" : "—") + "</span></td>" +
-      "<td>" + reels + "</td>" +
-      "<td>" + (u.days ? "🔥 " + bn(u.streak) : "—") + "</td>" +
-      '<td class="tiny dim">' + (u.lastActive ? timeAgo(u.lastActive) : "—") + "</td>" +
-      '<td><button class="btn btn-gray" style="padding:5px 11px;font-size:11px" onclick="event.stopPropagation();openDetail(\'' + esc(u.uid) + "')\">দেখো ›</button></td>" +
-      "</tr>";
-  }).join("");
-}
-
-/* ---------------- user detail ---------------- */
-async function openDetail(uid) {
-  state.detailUid = uid; state.confirmKey = ""; state.detail = null;
-  $("#modalBack").classList.add("open");
-  $("#detailBox").innerHTML = '<p class="dim spin" style="text-align:center;padding:30px">লোড হচ্ছে…</p>';
-  try {
-    var d = await api("/api/admin/user/" + encodeURIComponent(uid));
-    state.detail = d;
-    renderDetail();
-  } catch (e) {
-    if (e && e.auth) return;
-    $("#detailBox").innerHTML = '<p class="err show" style="padding:20px">লোড হয়নি — আবার খোলো</p>';
-  }
-}
-function closeModal() { $("#modalBack").classList.remove("open"); }
-function renderDetail() {
-  var d = state.detail;
-  if (!d) return;
-  var u = d.user || {};
-  var days = d.days || [];
-  var squares = function (arr) { return (arr || []).map(function (p) { return p ? "🟩" : "⬜"; }).join(""); };
-  var rows = days.length ? days.map(function (dd) {
-    var reelsStyle = (dd.reelsMin || 0) > 60 ? "color:var(--rose);font-weight:800" : "";
-    return "<tr>" +
-      '<td class="mono dim">' + esc(dd.date) + "</td>" +
-      '<td style="text-align:center"><span class="mono">' + bn((dd.prayers || []).filter(Boolean).length) + "/৫</span> <span class=\"dim\">" + squares(dd.prayers) + "</span></td>" +
-      '<td style="color:var(--sky)">' + bn(dd.waterMl) + "মি°</td>" +
-      '<td style="' + reelsStyle + '">' + (dd.reelsMin === null ? "—" : bn(dd.reelsMin) + "মি") + "</td>" +
-      '<td style="color:var(--amber)">' + bn(dd.dhikr) + "</td>" +
-      '<td class="dim">' + bn(dd.meditationMin) + "মি</td>" +
-      '<td class="dim tiny mono">' + esc(dd.sleepBed || "—") + "→" + esc(dd.sleepWake || "—") + "</td>" +
-      "</tr>";
-  }).join("") : '<tr><td colspan="7" style="text-align:center;padding:14px" class="dim">কোনো হ্যাবিট ডেটা নেই — এখনো অ্যাপ ব্যবহার করেনি</td></tr>';
-
-  $("#detailBox").innerHTML =
-    '<div class="idbox">' +
-      '<p style="font-size:19px;font-weight:800;color:var(--em300)">' + esc(d.name || u.displayName || "—") + "</p>" +
-      '<p class="small dim">✉️ ' + esc(u.email || "—") + "</p>" +
-      '<p class="tiny dim">' + (u.provider === "google" ? "🔵 Google (জিমেইল) দিয়ে অ্যাকাউন্ট" : "✉️ ইমেইল (ম্যানুয়াল) দিয়ে অ্যাকাউন্ট") + (u.emailVerified ? " · ✅ ভেরিফাইড" : " · ⏳ ভেরিফাই হয়নি") + "</p>" +
-      '<p class="tiny dim">অ্যাকাউন্ট খোলা: ' + fmtDate(u.createdAt) + " · শেষ লগইন: " + fmtDate(u.lastSignIn) + "</p>" +
-      '<p class="tiny dim">ক্লাউড ব্যাকআপ: ' + (d.backupUpdatedAt ? timeAgo(d.backupUpdatedAt) : "নেই") + "</p>" +
-      '<p class="tiny dim">স্ট্রিক: 🔥 ' + bn((d.settings || {}).streak) + " · পয়েন্ট: ⭐ " + bn(d.points) + " · বন্ধু: " + bn((d.friends || []).length) + "</p>" +
-      (u.disabled ? '<p class="small" style="color:var(--rose);font-weight:800">🚫 এই অ্যাকাউন্ট ব্যান করা আছে</p>' : "") +
-    "</div>" +
-    '<div class="idbox">' +
-      '<p class="small" style="font-weight:800;margin-bottom:8px">📅 শেষ ১৪ দিনের রিয়েল স্ট্যাটাস</p>' +
-      '<div style="overflow:auto"><table class="daystbl"><thead><tr>' +
-      "<th>তারিখ</th><th>নামাজ</th><th>পানি</th><th>রিলস</th><th>যিকির</th><th>মেডি</th><th>ঘুম</th>" +
-      "</tr></thead><tbody>" + rows + "</tbody></table></div>" +
-    "</div>" +
-    '<div class="act" id="actBox"></div>';
-  renderActions();
-}
-function renderActions() {
-  var d = state.detail, u = d ? d.user || {} : {};
-  if (!d) return;
-  var ck = state.confirmKey;
-  $("#actBox").innerHTML =
-    '<p class="small" style="font-weight:800;margin-bottom:10px">⚙️ অ্যাডমিন অ্যাকশন</p>' +
-    '<div class="grow" style="margin-bottom:10px">' +
-      '<input id="setPassVal" class="field mono" style="flex:1;min-width:170px" placeholder="নতুন পাসওয়ার্ড (৬+ অক্ষর)" />' +
-      '<button class="btn btn-em" onclick="actSetpass()">🔑 পাসওয়ার্ড বদলাও</button>' +
-      '<button class="btn btn-gray" onclick="actDo(\'resetmail\')">✉️ রিসেট মেইল</button>' +
-    "</div>" +
-    '<div class="grow">' +
-      (u.disabled
-        ? '<button class="btn btn-em" onclick="actDo(\'unban\')">✅ আনব্যান করো</button>'
-        : ck === "ban"
-          ? '<button class="btn btn-red spin" onclick="actDo(\'ban\')">⚠️ হ্যাঁ, ব্যান করে দাও!</button> <button class="btn btn-gray" onclick="state.confirmKey=\'\';renderActions()">না</button>'
-          : '<button class="btn btn-rose" onclick="confirmOr(\'ban\')">🚫 ব্যান করো</button>') +
-      (ck === "del"
-        ? '<button class="btn btn-red spin" onclick="actDo(\'delete\')">⚠️ হ্যাঁ, পুরো অ্যাকাউন্ট মুছে দাও!</button> <button class="btn btn-gray" onclick="state.confirmKey=\'\';renderActions()">না</button>'
-        : '<button class="btn btn-rose" onclick="confirmOr(\'del\')">🗑️ অ্যাকাউন্ট ডিলিট</button>') +
-    "</div>" +
-    '<p class="msg" id="actMsg"></p>' +
-    '<p class="note">ব্যান করলে ইউজারের সেশন কয়েক মিনিটের মধ্যে মারা যাবে আর লগইনে “অ্যাকাউন্ট ব্যান করা হয়েছে” দেখাবে। ডিলিট করলে অ্যাকাউন্ট + ক্লাউড ডেটা সব মুছে যাবে — ফেরানো যাবে না।</p>';
-}
-function confirmOr(key) {
-  if (state.confirmKey === key) { state.confirmKey = ""; actDo(key === "ban" ? "ban" : "delete"); return; }
-  state.confirmKey = key; renderActions();
-}
-function actSetpass() {
-  var v = String(($("#setPassVal") || {}).value || "").trim();
-  if (v.length < 6) { actMsg("পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে", true); return; }
-  actDo("setpass", { password: v });
-}
-function actMsg(text, bad) {
-  var el = $("#actMsg");
-  if (!el) return;
-  el.textContent = text;
-  el.style.color = bad ? "var(--rose)" : "";
-  el.classList.add("show");
-}
-async function actDo(action, extra) {
-  var uid = state.detailUid;
-  actMsg("⏳ হচ্ছে…");
-  try {
-    var j = await api("/api/admin/user/" + encodeURIComponent(uid), { method: "POST", body: Object.assign({ action: action }, extra || {}) });
-    if (j && j.ok) {
-      await loadUsers();
-      if (action === "delete") { closeModal(); return; }
-      await openDetail(uid);
-    } else {
-      actMsg((j && (j.message || j.error)) || "হয়নি", true);
-    }
-  } catch (e) {
-    if (e && e.auth) return;
-    if (e && e.data && e.data.message) actMsg(e.data.message, true);
-    else actMsg("নেটওয়ার্ক সমস্যা", true);
-  }
-}
-
-/* ---------------- ads ---------------- */
 async function loadAds() {
   try {
-    var j = await api("/api/admin/ads");
-    var cfg = j.meta && j.meta.cfg;
+    const snap = await getDoc(doc(db, "app", "meta"));
+    let cfg = snap.exists() ? (snap.data() || {}).cfg : null;
     if (typeof cfg === "string") { try { cfg = JSON.parse(cfg); } catch (e) { cfg = null; } }
-    if (!cfg) { adsMsg("অ্যাড কনফিগ পাওয়া যায়নি", true); return; }
-    state.ads = cfg;
-    if (!state.ads.at) state.ads.at = {};
-    if (!state.ads.ads) state.ads.ads = {};
-    $("#adsMaster").classList.toggle("on", !!state.ads.adsEnabled);
-    $("#amBanner").value = ((state.ads.ads.banner || {}).id) || "";
-    $("#amNative").value = ((state.ads.ads.native || {}).id) || "";
-    $("#amRewarded").value = ((state.ads.ads.rewarded || {}).id) || "";
-    $("#upVersion").value = state.ads.latestVersion || "";
-    $("#upApk").value = state.ads.apkUrl || "";
-    $("#upChg").value = state.ads.changelog || "";
-    $("#upForce").checked = !!state.ads.forceUpdate;
+    if (!cfg) cfg = {};
+    S.ads = cfg;
+    if (!S.ads.at) S.ads.at = {};
+    if (!S.ads.ads) S.ads.ads = {};
+    $("#adsMaster").classList.toggle("on", !!S.ads.adsEnabled);
+    $("#amBanner").value = ((S.ads.ads || {}).banner || {}).id || "";
+    $("#amNative").value = ((S.ads.ads || {}).native || {}).id || "";
+    $("#amRewarded").value = ((S.ads.ads || {}).rewarded || {}).id || "";
+    $("#upVersion").value = S.ads.latestVersion || "";
+    $("#upApk").value = S.ads.apkUrl || "";
+    $("#upChg").value = S.ads.changelog || "";
+    $("#upForce").classList.toggle("on", !!S.ads.forceUpdate);
     renderZones();
+    adsMsg("অ্যাড কনফিগ লোড হয়েছে ✅");
   } catch (e) {
-    if (e && e.auth) return;
-    adsMsg("অ্যাড কনফিগ লোড হয়নি — সার্ভার দেখো", true);
+    adsMsg("লোড হয়নি: " + String((e && e.code) || e).slice(0, 80), true);
   }
 }
 function renderZones() {
-  $("#zonesBox").innerHTML = AT_ZONES.map(function (z) {
-    var zone = (state.ads.at || {})[z.key] || { on: false, code: "" };
+  $("#zonesBox").innerHTML = AT_ZONES.map((z) => {
+    const zone = (S.ads.at || {})[z.key] || { on: false, code: "" };
     return '<div class="zone">' +
       '<div class="zt"><div style="min-width:0"><p class="zl">' + z.label + '</p><p class="zh">' + z.hint + "</p></div>" +
       '<button class="toggle mini' + (zone.on ? " on" : "") + '" onclick="zoneToggle(\'' + z.key + '\')"></button></div>' +
@@ -739,78 +754,50 @@ function renderZones() {
       "</div>";
   }).join("");
 }
-function zoneToggle(key) {
-  var z = state.ads.at[key] || (state.ads.at[key] = { on: false, code: "" });
+window.zoneToggle = (key) => {
+  const z = S.ads.at[key] || (S.ads.at[key] = { on: false, code: "" });
   z.on = !z.on;
   renderZones();
-}
-function zoneCode(ta, key) {
-  var z = state.ads.at[key] || (state.ads.at[key] = { on: false, code: "" });
+};
+window.zoneCode = (ta, key) => {
+  const z = S.ads.at[key] || (S.ads.at[key] = { on: false, code: "" });
   z.code = ta.value;
-}
-function toggleMaster() {
-  state.ads.adsEnabled = !state.ads.adsEnabled;
-  $("#adsMaster").classList.toggle("on", state.ads.adsEnabled);
-}
+};
+window.toggleMaster = () => {
+  S.ads.adsEnabled = !S.ads.adsEnabled;
+  $("#adsMaster").classList.toggle("on", S.ads.adsEnabled);
+};
 function adsMsg(text, bad) {
-  var el = $("#adsMsg");
+  const el = $("#adsMsg");
+  if (!el) return;
   el.textContent = text;
   el.style.color = bad ? "var(--rose)" : "";
-  el.classList.add("show");
-  clearTimeout(adsMsg._t);
-  adsMsg._t = setTimeout(function () { el.classList.remove("show"); }, 6000);
 }
-async function saveAds() {
-  if (!state.ads) return;
-  state.ads.ads = state.ads.ads || {};
-  state.ads.ads.banner = Object.assign({}, state.ads.ads.banner, { id: $("#amBanner").value.trim() });
-  state.ads.ads.native = Object.assign({}, state.ads.ads.native, { id: $("#amNative").value.trim() });
-  state.ads.ads.rewarded = Object.assign({}, state.ads.ads.rewarded, { id: $("#amRewarded").value.trim() });
-  state.ads.latestVersion = $("#upVersion").value.trim();
-  state.ads.apkUrl = $("#upApk").value.trim();
-  state.ads.changelog = $("#upChg").value;
-  state.ads.forceUpdate = $("#upForce").checked;
+window.saveAds = async function () {
+  if (!S.ads) return;
+  S.ads.ads = S.ads.ads || {};
+  S.ads.ads.banner = Object.assign({}, S.ads.ads.banner, { id: $("#amBanner").value.trim() });
+  S.ads.ads.native = Object.assign({}, S.ads.ads.native, { id: $("#amNative").value.trim() });
+  S.ads.ads.rewarded = Object.assign({}, S.ads.ads.rewarded, { id: $("#amRewarded").value.trim() });
+  S.ads.latestVersion = $("#upVersion").value.trim();
+  S.ads.apkUrl = $("#upApk").value.trim();
+  S.ads.changelog = $("#upChg").value;
+  S.ads.forceUpdate = $("#upForce").classList.contains("on");
   adsMsg("⏳ সেভ হচ্ছে…");
   try {
-    var j = await api("/api/admin/ads", { method: "POST", body: { cfg: state.ads } });
-    if (j && j.ok) adsMsg(j.message || "সেভ হয়ে গেছে ✅");
-    else adsMsg("সেভ হয়নি", true);
+    await setDoc(doc(db, "app", "meta"), { cfg: JSON.parse(JSON.stringify(S.ads)), updatedAt: serverTimestamp() }, { merge: true });
+    adsMsg("সেভ হয়ে গেছে ✅ — সব অ্যাপ ৫ মিনিটের মধ্যে আপডেট পাবে");
   } catch (e) {
-    if (e && e.auth) return;
-    adsMsg((e && e.data && e.data.message) || "নেটওয়ার্ক সমস্যা", true);
+    const c = String((e && e.code) || e);
+    adsMsg(c.includes("permission-denied") ? "⛔ অনুমতি নেই — গাইডের ধাপ ৪-এর rules পেস্ট করো" : "সেভ হয়নি: " + c.slice(0, 80), true);
   }
+};
+
+/* ---------------- boot sanity ---------------- */
+if (!window.crypto || !crypto.subtle) {
+  document.body.innerHTML = '<div style="color:#f1f5f9;font-family:sans-serif;padding:30px;text-align:center">⚠️ এই ব্রাউজারে নিরাপত্তা ফিচার (crypto) নেই। ফাইলটা সরাসরি না খুলে GitHub Pages লিংকে (https) খোলো।</div>';
 }
 
-/* ---------------- pin change ---------------- */
-async function changePin() {
-  var cur = $("#curPin").value.trim();
-  var nw = $("#newPin").value.trim();
-  var m = $("#pinMsg");
-  m.classList.remove("show");
-  function bad(t) { m.textContent = t; m.style.color = "var(--rose)"; m.classList.add("show"); }
-  if (!cur || !nw) return bad("দুইটা ঘরই পূরণ করো");
-  if (nw.length < 3 || nw.length > 12) return bad("নতুন পিন ৩–১২ অক্ষরের হতে হবে");
-  var btn = $("#pinBtn"); btn.disabled = true;
-  try {
-    var j = await api("/api/admin/session", { method: "POST", body: { pin: cur, newPin: nw } });
-    if (j && j.ok && j.token) {
-      state.token = j.token; lsSet(LS_TOKEN, j.token);
-      state.webPin = { isDefault: false };
-      $("#pinDefaultWarn").classList.add("hide");
-      $("#curPin").value = ""; $("#newPin").value = "";
-      m.textContent = j.message || "নতুন পিন সেভ হয়েছে ✅";
-      m.style.color = ""; m.classList.add("show");
-    } else {
-      bad((j && j.message) || "হয়নি");
-    }
-  } catch (e) {
-    if (e && e.auth) return;
-    bad((e && e.data && e.data.message) || "হয়নি — আবার চেষ্টা করো");
-  } finally { btn.disabled = false; }
-}
-
-/* ---------------- start ---------------- */
-boot();
 </script>
 </body>
 </html>
